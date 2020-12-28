@@ -43,4 +43,13 @@ func main() {
 
 	function.Args(100, 200, 300)
 	function.MultiType("A", 1, 2.3)
+
+	//mapDemo := make(map[string]int)
+	//mapDemo["chinese"] = 66
+	res := function.ReadValue("chinese")
+	fmt.Println(res)
+
+	res = function.Fibonacci(6)
+	fmt.Printf("Fibonacci num is %d\n", res)
+
 }
