@@ -43,4 +43,6 @@ func main() {
 
 	function.Args(100, 200, 300)
 	function.MultiType("A", 1, 2.3)
+
+	function.Duration()
 }

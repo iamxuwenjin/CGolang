@@ -27,7 +27,7 @@ func Visit(list []int, f func(int)) {
 
 func Accumulate(value int) func() int {
 	return func() int {
-		value ++
+		value++
 		return value
 	}
 }
@@ -39,13 +39,13 @@ func PlayerGen(name string) func() (string, int) {
 	}
 }
 
-func Args(args ...int)  {
-	for _, v := range args{
+func Args(args ...int) {
+	for _, v := range args {
 		fmt.Println(v)
 	}
 }
 
-func MultiType(args ...interface{})  {
+func MultiType(args ...interface{}) {
 	for _, v := range args {
 		switch v.(type) {
 		case int:
@@ -57,4 +57,18 @@ func MultiType(args ...interface{})  {
 			fmt.Printf(" is unknown type \n")
 		}
 	}
+}
+
+func Duration() {
+	//start := time.Now()
+	num := 0
+	for i := 0; i < 100000000; i++ {
+		num++
+	}
+	//elapsed := time.Since(start)
+	//fmt.Println("执行时间:", elapsed)
+}
+
+func GetArea(weight int, height int) int {
+	return weight * height
 }
