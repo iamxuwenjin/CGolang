@@ -3,6 +3,7 @@ package function
 import (
 	"fmt"
 	"math"
+	"sync"
 )
 
 func Typo(x, y float64) float64 {
@@ -71,4 +72,33 @@ func Duration() {
 
 func GetArea(weight int, height int) int {
 	return weight * height
+}
+
+var (
+	valueByKey = make(map[string]int)
+
+	valueByKeyGuard sync.Mutex
+)
+
+func ReadValue(key string) int {
+	// map 不是并发安全的
+	/*
+		valueByKeyGuard.Lock()
+		v := valueByKey[key]
+		valueByKeyGuard.Unlock()
+		return v
+	*/
+	valueByKey["chinese"] = 66
+
+	valueByKeyGuard.Lock()
+	defer valueByKeyGuard.Unlock()
+	return valueByKey[key]
+}
+
+func Fibonacci(n int) int {
+	if n <= 2 {
+		return 1
+	} else {
+		return Fibonacci(n-1) + Fibonacci(n-2)
+	}
 }
