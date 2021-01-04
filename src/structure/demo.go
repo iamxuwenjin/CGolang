@@ -1,6 +1,8 @@
 package structure
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Point struct {
 	X int
@@ -40,6 +42,12 @@ type Car struct {
 type Node struct {
 	Data int
 	Next *Node
+}
+
+type PreNode struct {
+	Data int
+	Pre  *PreNode
+	Next *PreNode
 }
 
 func ShowNode(p *Node) {
