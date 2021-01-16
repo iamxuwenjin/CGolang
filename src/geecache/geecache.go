@@ -1,6 +1,10 @@
 package geecache
 
-import "sync"
+import (
+	"fmt"
+	"log"
+	"sync"
+)
 
 // A Getter loads data for a key.
 type Getter interface {
@@ -48,4 +52,39 @@ func GetGroup(name string) *Group {
 	g := groups[name]
 	mu.RUnlock()
 	return g
+}
+
+// 从Group中查找key
+func (g *Group) Get(key string) (ByteView, error) {
+	if key == "" {
+		return ByteView{}, fmt.Errorf("key is required")
+	}
+
+	// 命中缓存直接返回
+	if v, ok := g.mainCache.get(key); ok {
+		log.Println("[GeeCache] hit")
+		return v, nil
+	}
+
+	// 未命中则调用回调函数，获取源数据
+	return g.load(key)
+}
+
+func (g *Group) load(key string) (value ByteView, err error) {
+	return g.getLocally(key)
+}
+
+func (g *Group) getLocally(key string) (ByteView, error) {
+	bytes, err := g.getter.Get(key)
+	if err != nil {
+		return ByteView{}, err
+	}
+	value := ByteView{b: cloneBytes(bytes)}
+	g.populateCache(key, value)
+	return value, nil
+
+}
+
+func (g *Group) populateCache(key string, value ByteView) {
+	g.mainCache.add(key, value)
 }
