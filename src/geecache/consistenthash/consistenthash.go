@@ -46,5 +46,6 @@ func (m *Map) Get(key string) string {
 	idx := sort.Search(len(m.keys), func(i int) bool {
 		return m.keys[i] >= hash
 	})
-	return m.hashMap[m.keys[idx%len(m.keys)]]
+	num := idx % len(m.keys)
+	return m.hashMap[m.keys[num]]
 }
