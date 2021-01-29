@@ -26,7 +26,8 @@ func (c *cache) get(key string) (value ByteView, ok bool) {
 	if c.lru == nil {
 		return
 	}
-	if v, ok := c.lru.Get(key); ok {
+	v, ok := c.lru.Get(key)
+	if ok {
 		return v.(ByteView), ok
 	}
 	return

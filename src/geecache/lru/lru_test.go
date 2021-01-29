@@ -14,7 +14,8 @@ func (d String) Len() int {
 func TestCache_Get(t *testing.T) {
 	lru := New(int64(0), nil)
 	lru.Add("A", String("apple"))
-	if v, ok := lru.Get("A"); !ok || string(v.(String)) != "apple" {
+	v, ok := lru.Get("A")
+	if !ok || string(v.(String)) != "apple" {
 		t.Fatal("cache hit A=apple failed")
 	}
 	if _, ok := lru.Get("B"); ok {

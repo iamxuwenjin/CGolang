@@ -29,7 +29,7 @@ func startCacheServer(addr string, addrs []string, gee *geecache.Group) {
 	peers := geecache.NewHTTPPool(addr)
 	peers.Set(addrs...)
 	gee.RegisterPeers(peers)
-	log.Println("geecache is runing at", addr)
+	log.Println("geecache is running at", addr)
 	log.Fatal(http.ListenAndServe(addr[7:], peers))
 }
 
@@ -53,8 +53,8 @@ func startAPIServer(apiAddr string, gee *geecache.Group) {
 func main() {
 	var port int
 	var api bool
-	flag.IntVar(&port, "port", 8001, "GeeCache server port")
-	flag.BoolVar(&api, "api", false, "Start a api server?")
+	flag.IntVar(&port, "port", 8003, "GeeCache server port")
+	flag.BoolVar(&api, "api", true, "Start a api server?")
 	flag.Parse()
 
 	apiAddr := "http://localhost:9999"

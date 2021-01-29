@@ -3,10 +3,10 @@ package lru
 import "container/list"
 
 type Cache struct {
-	maxBytes  int64
-	nBytes    int64
-	ll        *list.List
-	cache     map[string]*list.Element // 指针类型
+	maxBytes  int64                    // 最大容量
+	nBytes    int64                    // 当前容量
+	ll        *list.List               // 有序列表
+	cache     map[string]*list.Element //
 	onEvicted func(key string, value Value)
 }
 
@@ -15,10 +15,12 @@ type entry struct {
 	value Value
 }
 
+// 值为所有实现了Len方法的类型
 type Value interface {
 	Len() int
 }
 
+// 实例化一个Cache
 func New(maxBytes int64, onEvicted func(string, Value)) *Cache {
 	return &Cache{
 		maxBytes:  maxBytes,
@@ -30,6 +32,7 @@ func New(maxBytes int64, onEvicted func(string, Value)) *Cache {
 
 // query
 func (c *Cache) Get(key string) (value Value, ok bool) {
+	// 如果存在,将其移动到队首，返回结果值
 	if ele, ok := c.cache[key]; ok {
 		c.ll.MoveToFront(ele)
 		kv := ele.Value.(*entry)

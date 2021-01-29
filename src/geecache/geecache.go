@@ -21,9 +21,9 @@ func (f GetterFunc) Get(key string) ([]byte, error) {
 
 // A Group is a cache namespace and associated data loaded spread over
 type Group struct {
-	name      string
-	getter    Getter
-	mainCache cache
+	name      string // name space
+	getter    Getter // callback
+	mainCache cache  // 实现并发缓存
 	peers     PeerPicker
 }
 
@@ -59,29 +59,6 @@ func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
 	return ByteView{b: bytes}, nil
 }
 
-// create new instance of Group
-func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
-	if getter == nil {
-		panic("nil getter")
-	}
-	mu.Lock()
-	defer mu.Unlock()
-	g := &Group{
-		name:      name,
-		getter:    getter,
-		mainCache: cache{cacheBytes: cacheBytes},
-	}
-	groups[name] = g
-	return g
-}
-
-func GetGroup(name string) *Group {
-	mu.RLock()
-	g := groups[name]
-	mu.RUnlock()
-	return g
-}
-
 // 从Group中查找key
 func (g *Group) Get(key string) (ByteView, error) {
 	if key == "" {
@@ -111,4 +88,27 @@ func (g *Group) getLocally(key string) (ByteView, error) {
 
 func (g *Group) populateCache(key string, value ByteView) {
 	g.mainCache.add(key, value)
+}
+
+// create new instance of Group
+func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
+	if getter == nil {
+		panic("nil getter")
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	g := &Group{
+		name:      name,
+		getter:    getter,
+		mainCache: cache{cacheBytes: cacheBytes},
+	}
+	groups[name] = g
+	return g
+}
+
+func GetGroup(name string) *Group {
+	mu.RLock()
+	g := groups[name]
+	mu.RUnlock()
+	return g
 }
