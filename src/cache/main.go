@@ -1,9 +1,9 @@
 package main
 
 import (
+	"cache/geecache"
 	"flag"
 	"fmt"
-	"geecache"
 	"log"
 	"net/http"
 )
