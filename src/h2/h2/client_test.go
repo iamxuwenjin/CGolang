@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 )
@@ -31,18 +32,18 @@ func TestProtocolInfo(t *testing.T) {
 	_ = resp.Body.Close()
 }
 
-// 验证client复用性
+// 验证client 单个HTTP连接的可复用性
 func TestClientReuse(t *testing.T) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		// 强制使用h2
 		ForceAttemptHTTP2: true,
 		// 允许最大连接数
-		MaxIdleConns: 10,
+		MaxIdleConns: 1,
 		// 允许最大空闲连接数
-		MaxConnsPerHost: 10,
+		MaxConnsPerHost: 1,
 		// 每个host允许最大空闲连接数
-		MaxIdleConnsPerHost: 10,
+		MaxIdleConnsPerHost: 1,
 		// 单个连接允许最大空闲时间
 		IdleConnTimeout: 2 * time.Minute,
 	}
@@ -69,4 +70,101 @@ func TestClientReuse(t *testing.T) {
 	}
 	content, _ = ioutil.ReadAll(resp.Body)
 	fmt.Println(string(content))
+	_ = resp.Body.Close()
+
+}
+
+// 验证HTTP2的fully multiplexed 完全多路复用
+func TestFullyMux(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		// 强制使用h2
+		ForceAttemptHTTP2: true,
+		// 允许最大连接数
+		MaxIdleConns: 1,
+		// 允许最大空闲连接数
+		MaxConnsPerHost: 1,
+		// 每个host允许最大空闲连接数
+		MaxIdleConnsPerHost: 1,
+		// 单个连接允许最大空闲时间
+		IdleConnTimeout: 2 * time.Minute,
+	}
+	client := &http.Client{
+		Transport: tr,
+	}
+	// 率先调用响应延迟的接口，HTTP2不存在线头阻塞，无需等待delay_resp接口响应
+	go func() {
+		defer wg.Done()
+		resp, err := client.Get("https://localhost:8080/delay_resp")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		content, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(content))
+		_ = resp.Body.Close()
+	}()
+	time.Sleep(time.Second)
+	// 率先响应protocol_info接口
+	go func() {
+		defer wg.Done()
+		resp, err := client.Get("https://localhost:8080/protocol_info")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		content, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(content))
+		_ = resp.Body.Close()
+	}()
+	wg.Wait()
+}
+
+// 验证HTTP1.x的对头阻塞
+func TestHTTPHeadBlock(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		// 强制使用h2
+		ForceAttemptHTTP2: true,
+		// 允许最大连接数
+		MaxIdleConns: 1,
+		// 允许最大空闲连接数
+		MaxConnsPerHost: 1,
+		// 每个host允许最大空闲连接数
+		MaxIdleConnsPerHost: 1,
+		// 单个连接允许最大空闲时间
+		IdleConnTimeout: 2 * time.Minute,
+	}
+	client := &http.Client{
+		Transport: tr,
+	}
+	// 率先调用响应延迟的接口，HTTP1.x存在线头阻塞，需等待delay_resp接口响应
+	go func() {
+		defer wg.Done()
+		resp, err := client.Get("http://localhost:8081/delay_resp")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		content, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(content))
+		_ = resp.Body.Close()
+	}()
+	time.Sleep(time.Second)
+	go func() {
+		defer wg.Done()
+		resp, err := client.Get("http://localhost:8081/protocol_info")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		content, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(content))
+		_ = resp.Body.Close()
+	}()
+	wg.Wait()
 }
