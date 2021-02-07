@@ -168,3 +168,24 @@ func TestHTTPHeadBlock(t *testing.T) {
 	}()
 	wg.Wait()
 }
+
+func TestServerPush(t *testing.T) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		// 强制使用h2
+		ForceAttemptHTTP2: true,
+	}
+	client := &http.Client{
+		Transport: tr,
+	}
+	resp, err := client.Get("https://localhost:8080/server_push")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	content, _ := ioutil.ReadAll(resp.Body)
+	// 很遗憾我们没有收到，来自服务端的推送，原因是目前Go http client 不支持服务端推送
+	// 我们可以在Chrome验证这个问题
+	fmt.Println(string(content))
+	_ = resp.Body.Close()
+}
