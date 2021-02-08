@@ -1,23 +1,18 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"orm/orm"
 )
 
 func main() {
-	db, _ := sql.Open("mysql", "root:xuwenjin@tcp(127.0.0.1:3306)/data")
-
-	//设置数据库最大连接数
-	db.SetConnMaxLifetime(100)
-	//设置上数据库最大闲置连接数
-	db.SetMaxIdleConns(10)
-	//验证连接
-	if err := db.Ping(); err != nil {
-		fmt.Println(err)
-		fmt.Println("open database fail")
-		return
-	}
-	fmt.Println("connect success")
+	engine, _ := orm.NewEngine("mysql", "root:xuwenjin@tcp(127.0.0.1:3306)/data")
+	defer engine.Close()
+	se := engine.NewSession()
+	_, _ = se.Raw("DROP TABLE IF EXISTS User;").Exec()
+	_, _ = se.Raw("CREATE TABLE User(Name text);").Exec()
+	result, _ := se.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
+	count, _ := result.RowsAffected()
+	fmt.Printf("Exec success, %d affected\n", count)
 }
