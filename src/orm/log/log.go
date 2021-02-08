@@ -16,10 +16,10 @@ var (
 
 // log methods
 var (
-	Error  = errorLog.Println
-	Errorf = errorLog.Printf
-	Info   = infoLog.Println
-	Infof  = infoLog.Printf
+	Error       = errorLog.Println
+	ErrorFormat = errorLog.Printf
+	Info        = infoLog.Println
+	InfoFormat  = infoLog.Printf
 )
 
 // log levels
