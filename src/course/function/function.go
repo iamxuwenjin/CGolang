@@ -24,7 +24,7 @@ func (s *Struct) Call(p interface{}) {
 	fmt.Println("from struct", p)
 }
 
-// 函数定义为类型
+// 定义函数类型
 type FuncCaller func(interface{})
 
 // 实现Invoker的Call

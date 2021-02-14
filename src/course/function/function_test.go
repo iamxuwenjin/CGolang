@@ -34,4 +34,5 @@ func TestJoinStrings(t *testing.T) {
 
 func TestFibonacci(t *testing.T) {
 	fmt.Println(Fibonacci(10))
+
 }
