@@ -36,3 +36,8 @@ func TestFibonacci(t *testing.T) {
 	fmt.Println(Fibonacci(10))
 
 }
+
+func TestFuncDuration(t *testing.T) {
+	FuncDuration(45, Fibonacci)
+	FuncDuration(44, FibonacciCache)
+}

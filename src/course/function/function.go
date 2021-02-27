@@ -3,6 +3,7 @@ package function
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // 匿名函数作为回调函数
@@ -51,4 +52,30 @@ func Fibonacci(n int) (res int) {
 		res = Fibonacci(n-1) + Fibonacci(n-2)
 	}
 	return
+}
+
+// 内存缓存方法实现
+const LIM = 45
+
+var fibs [LIM]int
+
+func FibonacciCache(n int) (res int) {
+	if fibs[n] != 0 {
+		res = fibs[n]
+	}
+	if n < 2 {
+		return 1
+	} else {
+		res = FibonacciCache(n-1) + FibonacciCache(n-2)
+	}
+	fibs[n] = res
+	return
+}
+
+// 计时器
+func FuncDuration(num int, f func(num int) (res int)) {
+	start := time.Now()
+	f(num)
+	elapsed := time.Since(start)
+	fmt.Println("该函数执行完成耗时：", elapsed)
 }

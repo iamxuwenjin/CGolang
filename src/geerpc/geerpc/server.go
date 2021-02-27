@@ -2,10 +2,12 @@ package geerpc
 
 import (
 	"encoding/json"
-	"geerpc/src/geerpc/codec"
+	"fmt"
+	"geerpc/geerpc/codec"
 	"io"
 	"log"
 	"net"
+	"reflect"
 	"sync"
 )
 
@@ -76,6 +78,50 @@ func (server *Server) serverCodec(cc codec.Codec) {
 	}
 	wg.Wait()
 	_ = cc.Close()
+}
+
+type request struct {
+	h            *codec.Header // header of request
+	argv, replyV reflect.Value // argv and replyV of request
+}
+
+func (server *Server) readRequestHeader(cc codec.Codec) (*codec.Header, error) {
+	var h codec.Header
+	if err := cc.ReadHeader(&h); err != nil {
+		if err != io.EOF && err != io.ErrUnexpectedEOF {
+			log.Println("rpc Server: read header error", err)
+		}
+		return nil, err
+	}
+	return &h, nil
+}
+
+func (server *Server) readRequest(cc codec.Codec) (*request, error) {
+	h, err := server.readRequestHeader(cc)
+	if err != nil {
+		return nil, err
+	}
+	req := &request{h: h}
+	req.argv = reflect.New(reflect.TypeOf(""))
+	if err = cc.ReadBody(req.argv.Interface()); err != nil {
+		log.Println("rpc server: read argv err:", err)
+	}
+	return req, nil
+}
+
+func (server *Server) sendResponse(cc codec.Codec, h *codec.Header, body interface{}, sending *sync.Mutex) {
+	sending.Lock()
+	defer sending.Unlock()
+	if err := cc.Write(h, body); err != nil {
+		log.Println("rpc server: write response error:", err)
+	}
+}
+
+func (server *Server) handleRequest(cc codec.Codec, req *request, sending *sync.Mutex, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println(req.h, req.argv.Elem())
+	req.replyV = reflect.ValueOf(fmt.Sprintf("geerpc resp %d", req.h.Seq))
+	server.sendResponse(cc, req.h, req.replyV.Interface(), sending)
 }
 
 // invalidRequest is a placeholder for response argv when error occurs

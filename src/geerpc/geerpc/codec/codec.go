@@ -5,7 +5,7 @@ import "io"
 type Header struct {
 	ServiceMethod string // 服务名和方法名，通常与 Go 语言中的结构体和方法相映射
 	Seq           uint64 // 请求的序号
-	error         string
+	Error         string // err
 }
 
 type Codec interface {
